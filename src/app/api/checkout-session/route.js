@@ -27,7 +27,7 @@ export async function POST(req) {
 				}
 			],
 			mode: "payment",
-			success_url: `${body.origin}/success`,
+			success_url: `${body.origin}/browse`,
 			cancel_url: `${body.origin}/cancel`
 		});
 		return NextResponse.json({ id: session.id });

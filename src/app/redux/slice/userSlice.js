@@ -2,13 +2,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 const initialState = {
 	profile: null,
-	loading: false,
-	error: null
 };
 
 export const fetchUserProfile = createAsyncThunk(
-	"user/fetchProfile", // Unique action type
-	async (_, { rejectWithValue }) => { // Use rejectWithValue for errors
+	"user/profile",
+	async (arg, { dispatch }) => {
 		try {
 			const response = await fetch(
 				`${process.env.NEXT_PUBLIC_BASE_URL}user/profile`,
@@ -20,45 +18,46 @@ export const fetchUserProfile = createAsyncThunk(
 					},
 				}
 			);
-			if (!response.ok) {
-				throw new Error("Failed to fetch profile");
-			}
-			const json = await response.json(); // Let Redux Toolkit handle the state update
-			console.log('...', json)
-			return json
+			const userDetails = await response.json();
+			dispatch(setUser(userDetails));
+			console.log(userDetails, "userDetails");
+			// const data = await response.json()
+			// console.log(data,"data")
+			return userDetails;
 		} catch (error) {
-			return rejectWithValue(error.message);
+			console.log(error);
 		}
 	}
 );
 
-export const updateAvatar = createAsyncThunk(
-	"user/updateAvatar", // Unique action type
-	async (avatar, { rejectWithValue }) => { // Accept avatar directly
+export const updateProfile = createAsyncThunk(
+	"user/profile",
+	async (arg, { dispatch }) => {
 		try {
-			const formData = new FormData();
-			formData.append("avatar", avatar);
-
 			const response = await fetch(
-				`${process.env.NEXT_PUBLIC_BASE_URL}user/updateAvatar`,
+				`${process.env.NEXT_PUBLIC_BASE_URL}user/updateProfile`,
 				{
 					method: "POST",
 					headers: {
+						"Content-Type": "application/json",
 						Authorization: `Bearer ${localStorage.getItem("token")}`,
 					},
-					body: formData // Send as FormData
+					body: JSON?.stringify({ name: arg.name, email: arg.email })
 				}
 			);
-			if (!response.ok) {
-				throw new Error("Avatar update failed");
-			}
-			return await response.json();
+			const userDetails = await response.json();
+			dispatch(setUser(userDetails));
+			console.log(userDetails, "userDetails");
+			// const data = await response.json()
+			// console.log(data,"data")
+			return userDetails;
 		} catch (error) {
-			return rejectWithValue(error.message);
+			console.log(error);
 		}
 	}
 );
 
+//Creation of Auth Slice with initial state and reducers
 const userSlice = createSlice({
 	name: "user",
 	initialState,
@@ -67,37 +66,8 @@ const userSlice = createSlice({
 			state.profile = action.payload;
 		},
 	},
-	extraReducers: (builder) => {
-		builder
-			// Handle fetchUserProfile
-			.addCase(fetchUserProfile.pending, (state) => {
-				state.loading = true;
-				state.error = null;
-			})
-			.addCase(fetchUserProfile.fulfilled, (state, action) => {
-				state.loading = false;
-				state.profile = action.payload;
-			})
-			.addCase(fetchUserProfile.rejected, (state, action) => {
-				state.loading = false;
-				state.error = action.payload;
-			})
-
-			// Handle updateAvatar
-			.addCase(updateAvatar.pending, (state) => {
-				state.loading = true;
-				state.error = null;
-			})
-			.addCase(updateAvatar.fulfilled, (state, action) => {
-				state.loading = false;
-				state.profile = { ...state.profile, ...action.payload };
-			})
-			.addCase(updateAvatar.rejected, (state, action) => {
-				state.loading = false;
-				state.error = action.payload;
-			});
-	}
 });
 
 export const { setUser } = userSlice.actions;
+
 export default userSlice.reducer;

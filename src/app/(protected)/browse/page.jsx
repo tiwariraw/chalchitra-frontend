@@ -24,6 +24,8 @@ export default function Browse() {
     dispatch(getAiRecommendationList());
   }, []);
 
+  console.log(aiRecommendationList);
+
   const featuredMovie = {
     urlName: "Good Cop Bad Cop",
     title: "Good Cop Bad Cop",

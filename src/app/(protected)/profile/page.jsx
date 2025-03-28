@@ -13,7 +13,7 @@ import {
   Paper,
 } from "@mui/material";
 import UploadIcon from "@mui/icons-material/Upload";
-import { fetchUserProfile } from "../../redux/slice/userSlice";
+import { fetchUserProfile, updateProfile } from "../../redux/slice/userSlice";
 import { logout } from "../../redux/slice/authSlice";
 import { useRouter } from "next/navigation";
 
@@ -21,16 +21,20 @@ export default function Profile() {
   const dispatch = useDispatch();
   const router = useRouter();
 
-  // const {profile}  = useSelector((state) => state.userSlice);
-  const profile = useSelector((state) => state.userSlice);
-  console.log(profile);
+  const profile = useSelector((state) => state.user?.profile || {});
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [avatar, setAvatar] = useState("");
   const [mywatchList, setMywatchList] = useState([]);
 
-  const handleAvatarChange = async (event) => {
+  const handleProfileChange = async (event) => {
+    dispatch(
+      updateProfile({
+        name,
+        email,
+      })
+    );
     if (!event.target.files?.[0]) return;
     const file = event.target.files[0];
 
@@ -50,8 +54,8 @@ export default function Profile() {
 
     const data = await response.json();
 
-    if (data.profileAvatar) {
-      setAvatar(data.profileAvatar);
+    if (data?.profileAvatar) {
+      setAvatar(data?.profileAvatar);
     }
   };
 
@@ -62,10 +66,10 @@ export default function Profile() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (profile) {
+    if (profile && Object.keys(profile).length > 0) {
       setName(profile?.name);
       setEmail(profile?.email);
-      setAvatar(profile?.profileUrl);
+      setAvatar(profile?.avatar);
     }
   }, [profile]);
 
@@ -99,7 +103,7 @@ export default function Profile() {
                       <div className="card" key={index}>
                         <div className="card-image-container">
                           <Image
-                            src={ele?.poster}
+                            src={ele?.posterUrl}
                             alt={ele?.title}
                             //   layout="fill"
                             width={300}
@@ -135,12 +139,7 @@ export default function Profile() {
               sx={{ color: "white", borderColor: "white" }}
             >
               Upload Avatar
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={handleAvatarChange}
-              />
+              <input type="file" accept="image/*" hidden />
             </Button>
           </Box>
 
@@ -182,7 +181,12 @@ export default function Profile() {
           </Box>
 
           {/* ✅ Save Button */}
-          <Button variant="contained" color="error" sx={{ mt: 4 }}>
+          <Button
+            variant="contained"
+            color="error"
+            sx={{ mt: 4 }}
+            onClick={handleProfileChange}
+          >
             Save Changes
           </Button>
           <Button
